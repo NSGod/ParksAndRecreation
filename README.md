@@ -74,7 +74,10 @@ Line, paragraph, sentence, and word views for `Swift.String`, providing idiomati
 Array(string.lines)            // -> [String]
 ```
 
-### [Target-Action Notifier](https://github.com/zwaldowski/ParksAndRecreation/blob/master/Swift-2/Notifier.playground)
+### Target-Action Notifier
+
+* [Swift 2](https://github.com/zwaldowski/ParksAndRecreation/blob/master/Swift-2/Notifier.playground)
+* [Swift 3](https://github.com/zwaldowski/ParksAndRecreation/blob/master/Swift-3/Notifier.playground)
 
 A helper for performing type-safe multicast callbacks. The result is a lot like
 using `UIControl`, but for weakly held objects and without unsafe selectors.
