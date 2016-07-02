@@ -33,15 +33,6 @@ An extension on `UIViewController` providing a `keyboardLayoutGuide` property. T
 
 Requires iOS 9.0.
 
-### [String Tokenization](https://github.com/zwaldowski/ParksAndRecreation/blob/master/Swift-2/LineParagraphs.playground)
-
-Line, paragraph, sentence, and word views for `Swift.String`, providing alternatives to `String.enumerateSubstringsInRange(_:options:_:)`.
-
-```swift
-Array(string.lines)            // -> [Range<String.Index>]
-Array(string.lines.substrings) // -> [String]
-```
-
 ### [String Localization](https://github.com/zwaldowski/ParksAndRecreation/blob/master/Swift-2/Localize.playground)
 
 Formatted localization using Swift string formatting. Introduces `localize` with
@@ -71,6 +62,17 @@ And in your `Localizable.strings`, just like in Cocoa:
 
 All placeholders should be `%@` on the end of the key, and be represented
 positionally, i.e., with `%1$@`, `%2$@`, and so on.
+
+### String Tokenization
+
+* [Swift 2](https://github.com/zwaldowski/ParksAndRecreation/blob/master/Swift-2/StringViews.playground)
+* [Swift 3](https://github.com/zwaldowski/ParksAndRecreation/blob/master/Swift-3/StringViews.playground)
+
+Line, paragraph, sentence, and word views for `Swift.String`, providing idiomatic alternatives to `String.enumerateSubstringsInRange(_:options:_:)`.
+
+```swift
+Array(string.lines)            // -> [String]
+```
 
 ### [Target-Action Notifier](https://github.com/zwaldowski/ParksAndRecreation/blob/master/Swift-2/Notifier.playground)
 
