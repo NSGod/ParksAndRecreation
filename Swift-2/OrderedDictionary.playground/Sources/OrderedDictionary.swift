@@ -1,3 +1,8 @@
+//
+//  OrderedDictionary.swift
+//  OrderedDictionary
+//
+
 public struct OrderedDictionary<Key: Hashable, Value> {
 
     public typealias Element = Hash.Element
