@@ -8,12 +8,12 @@ public struct OrderedDictionary<Key: Hashable, Value> {
     public typealias Element = Hash.Element
 
     public typealias Keys = [Key]
-    public private(set) var keys: Keys
+    public fileprivate(set) var keys: Keys
 
-    private typealias Hash = [Key: Value]
-    private var elements: Hash
+    fileprivate typealias Hash = [Key: Value]
+    fileprivate var elements: Hash
 
-    private init(keys: Keys, elements: Hash) {
+    fileprivate init(keys: Keys, elements: Hash) {
         self.keys = keys
         self.elements = elements
     }
@@ -30,14 +30,14 @@ extension OrderedDictionary {
 
 }
 
-extension OrderedDictionary: CollectionType {
+extension OrderedDictionary: Collection {
 
-    private func toItems<T: CollectionType where T.Generator.Element == Key>(keys: T) -> LazyMapCollection<T, Element> {
+    fileprivate func toItems<T: Collection>(_ keys: T) -> LazyMapCollection<T, Element> where T.Iterator.Element == Key {
         return keys.lazy.map { ($0, self.elements[$0]!) }
     }
 
-    public func generate() -> LazyMapGenerator<IndexingGenerator<[Key]>, Element> {
-        return toItems(keys).generate()
+    public func makeIterator() -> LazyMapIterator<IndexingIterator<[Key]>, Element> {
+        return toItems(keys).makeIterator()
     }
 
     public var startIndex: Int { return keys.startIndex }
@@ -67,7 +67,7 @@ extension OrderedDictionary: MutableIndexable {
             return (keys[position], value)
         }
         set {
-            guard case keys.indices = position where elements.removeValueForKey(keys[position]) != nil else {
+            guard case keys.indices = position , elements.removeValue(forKey: keys[position]) != nil else {
                 preconditionFailure("index out of bounds")
             }
 
@@ -80,9 +80,9 @@ extension OrderedDictionary: MutableIndexable {
 
 extension OrderedDictionary {
 
-    public func indexForKey(key: Key) -> Int? {
+    public func indexForKey(_ key: Key) -> Int? {
         let hash = key.hashValue
-        return keys.indexOf({ $0.hashValue == hash })
+        return keys.index(where: { $0.hashValue == hash })
     }
 
     public subscript(key: Key) -> Value? {
@@ -100,8 +100,8 @@ extension OrderedDictionary {
         }
     }
 
-    public mutating func updateElement(element: Element, atIndex position: Int) -> Element? {
-        guard case keys.indices = position, let oldValue = elements.removeValueForKey(keys[position]) else {
+    public mutating func updateElement(_ element: Element, atIndex position: Int) -> Element? {
+        guard case keys.indices = position, let oldValue = elements.removeValue(forKey: keys[position]) else {
             preconditionFailure("index out of bounds")
         }
 
@@ -111,7 +111,7 @@ extension OrderedDictionary {
         return (oldKey, oldValue)
     }
 
-    public mutating func updateValue(value: Value, forKey key: Key) -> Value? {
+    public mutating func updateValue(_ value: Value, forKey key: Key) -> Value? {
         let ret = elements.updateValue(value, forKey: key)
         if ret == nil {
             keys.append(key)
@@ -119,29 +119,29 @@ extension OrderedDictionary {
         return ret
     }
 
-    public mutating func removeValueForKey(key: Key) -> Value? {
-        guard let ret = elements.removeValueForKey(key), index = indexForKey(key) else { return nil }
-        keys.removeAtIndex(index)
+    public mutating func removeValueForKey(_ key: Key) -> Value? {
+        guard let ret = elements.removeValue(forKey: key), let index = indexForKey(key) else { return nil }
+        keys.remove(at: index)
         return ret
     }
 
 }
 
-extension OrderedDictionary: RangeReplaceableCollectionType {
+extension OrderedDictionary: RangeReplaceableCollection {
 
     public init() {
         keys = Keys()
         elements = Hash()
     }
 
-    public mutating func replaceRange<C : CollectionType where C.Generator.Element == Element>(subRange: Range<Int>, with newElements: C) {
+    public mutating func replaceSubrange<C : Collection>(_ subRange: Range<Int>, with newElements: C) where C.Iterator.Element == Element {
         let oldKeys = keys[subRange]
 
         let newKeys = newElements.lazy.map { $0.0 }
-        keys.replaceRange(subRange, with: newKeys)
+        keys.replaceSubrange(subRange, with: newKeys)
 
         for oldKey in oldKeys {
-            elements.removeValueForKey(oldKey)
+            elements.removeValue(forKey: oldKey)
         }
 
         for (newKey, value) in newElements {
@@ -149,43 +149,43 @@ extension OrderedDictionary: RangeReplaceableCollectionType {
         }
     }
 
-    public mutating func insert(newElement: Element, atIndex i: Int) {
+    public mutating func insert(_ newElement: Element, at i: Int) {
         var i = i
         if let indexInKeys = indexForKey(newElement.0) {
-            keys.removeAtIndex(indexInKeys)
+            keys.remove(at: indexInKeys)
             if i > indexInKeys {
-                i += i.predecessor()
+                i += (i - 1)
             }
         }
 
-        keys.insert(newElement.0, atIndex: i)
+        keys.insert(newElement.0, at: i)
         elements[newElement.0] = newElement.1
     }
 
-    public mutating func reserveCapacity(n: Int) {
+    public mutating func reserveCapacity(_ n: Int) {
         keys.reserveCapacity(n)
     }
 
-    public mutating func removeAtIndex(i: Int) -> Element {
-        let key = keys.removeAtIndex(i)
-        let value = elements.removeValueForKey(key)
+    public mutating func remove(at i: Int) -> Element {
+        let key = keys.remove(at: i)
+        let value = elements.removeValue(forKey: key)
         return (key, value!)
     }
 
     public mutating func removeFirst() -> Element {
         let key = keys.removeFirst()
-        let value = elements.removeValueForKey(key)
+        let value = elements.removeValue(forKey: key)
         return (key, value!)
     }
 
-    public mutating func removeAll(keepCapacity keepCapacity: Bool = false) {
-        keys.removeAll(keepCapacity: keepCapacity)
-        elements.removeAll(keepCapacity: keepCapacity)
+    public mutating func removeAll(keepingCapacity keepCapacity: Bool = false) {
+        keys.removeAll(keepingCapacity: keepCapacity)
+        elements.removeAll(keepingCapacity: keepCapacity)
     }
 
 }
 
-extension OrderedDictionary: DictionaryLiteralConvertible {
+extension OrderedDictionary: ExpressibleByDictionaryLiteral {
 
     public init(dictionaryLiteral list: Element...) {
         keys = list.map { $0.0 }
@@ -203,12 +203,12 @@ extension OrderedDictionary {
         return keys.lazy.map { self.elements[$0]! }
     }
 
-    public mutating func sortInPlace(@noescape isOrderedBefore: (Element, Element) -> Bool) {
-        keys.sortInPlace { (key1, key2) -> Bool in
-            switch (self.elements.indexForKey(key1), self.elements.indexForKey(key2)) {
-            case (.Some(let el1), .Some(let el2)):
+    public mutating func sortInPlace(_ isOrderedBefore: (Element, Element) -> Bool) {
+        keys.sort { (key1, key2) -> Bool in
+            switch (self.elements.index(forKey: key1), self.elements.index(forKey: key2)) {
+            case (.some(let el1), .some(let el2)):
                 return isOrderedBefore(self.elements[el1], self.elements[el2])
-            case (.None, .Some):
+            case (.none, .some):
                 return true
             default:
                 return false
@@ -216,7 +216,7 @@ extension OrderedDictionary {
         }
     }
 
-    public func sort(@noescape isOrderedBefore: (Element, Element) -> Bool) -> OrderedDictionary<Key, Value> {
+    public func sort(_ isOrderedBefore: (Element, Element) -> Bool) -> OrderedDictionary<Key, Value> {
         var new = self
         new.sortInPlace(isOrderedBefore)
         return new
@@ -242,7 +242,7 @@ extension OrderedDictionary where Key: Comparable {
 
 extension OrderedDictionary: CustomStringConvertible, CustomDebugStringConvertible {
 
-    private func makeDescription(debug debug: Bool) -> String {
+    fileprivate func makeDescription(debug: Bool) -> String {
         if isEmpty { return "[:]" }
 
         var result = "["
@@ -254,15 +254,15 @@ extension OrderedDictionary: CustomStringConvertible, CustomDebugStringConvertib
                 result += ", "
             }
             if debug {
-                debugPrint(key, terminator: "", toStream: &result)
+                debugPrint(key, terminator: "", to: &result)
             } else {
-                print(key, terminator: "", toStream: &result)
+                print(key, terminator: "", to: &result)
             }
             result += ": "
             if debug {
-                debugPrint(value, terminator: "", toStream: &result)
+                debugPrint(value, terminator: "", to: &result)
             } else {
-                print(value, terminator: "", toStream: &result)
+                print(value, terminator: "", to: &result)
             }
         }
         result += "]"
@@ -282,7 +282,7 @@ extension OrderedDictionary: CustomStringConvertible, CustomDebugStringConvertib
 extension OrderedDictionary: CustomReflectable {
     
     public func customMirror() -> Mirror {
-        return Mirror(self, unlabeledChildren: self, displayStyle: .Dictionary)
+        return Mirror(self, unlabeledChildren: self, displayStyle: .dictionary)
     }
     
 }
